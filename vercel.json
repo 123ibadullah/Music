@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "name": "musicflow-monorepo",
+  "builds": [
+    {
+      "src": "Backend/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "Music Web Application/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "Music Web Application/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "Backend/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "Music Web Application/index.html"
+    }
+  ]
+}
+

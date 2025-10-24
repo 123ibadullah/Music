@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { usePlayer } from '../context/PlayerContext';
-import SongItem from './SongItem';
-import AlbumItem from './AlbumItem';
-import PlaylistItem from './PlaylistItem';
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { usePlayer } from "../context/PlayerContext";
+import SongItem from "./SongItem";
+import AlbumItem from "./AlbumItem";
+import PlaylistItem from "./PlaylistItem";
 
 const SearchPage = () => {
   const { 
