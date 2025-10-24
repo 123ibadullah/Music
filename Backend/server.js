@@ -23,8 +23,17 @@ const app = express();
 // Trust proxy for Vercel/serverless (required for rate limiting and IP detection)
 app.set('trust proxy', 1);
 
+// Debug: Log environment variables status
+console.log("🔍 Environment Check:");
+console.log("- NODE_ENV:", process.env.NODE_ENV);
+console.log("- MONGO_URI exists:", !!process.env.MONGO_URI);
+console.log("- MONGO_URI length:", process.env.MONGO_URI?.length || 0);
+console.log("- CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME);
+
 // Connect to databases
+console.log("📞 Calling connectDB()...");
 connectDB();
+console.log("📞 Calling connectCloudinary()...");
 connectCloudinary();
 
 // Security Middlewares
