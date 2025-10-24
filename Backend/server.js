@@ -108,6 +108,37 @@ app.get("/api/debug/env", (req, res) => {
   });
 });
 
+// MongoDB connection test endpoint
+app.get("/api/debug/mongo", async (req, res) => {
+  try {
+    const mongoose = await import("mongoose");
+    
+    // Try to connect if not connected
+    if (mongoose.default.connection.readyState !== 1) {
+      await mongoose.default.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 10000,
+      });
+    }
+    
+    res.json({
+      success: true,
+      status: "Connected",
+      uri: process.env.MONGO_URI?.substring(0, 30) + "...",
+      readyState: mongoose.default.connection.readyState,
+      models: Object.keys(mongoose.default.models),
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      status: "Failed",
+      error: error.message,
+      code: error.code,
+      name: error.name,
+      uri: process.env.MONGO_URI?.substring(0, 30) + "...",
+    });
+  }
+});
+
 app.post("/api/test-upload", (req, res) => {
   console.log("Test upload received:", req.body);
   res.json({
