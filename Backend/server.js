@@ -20,6 +20,9 @@ import "./src/models/userModel.js";
 // App config
 const app = express();
 
+// Trust proxy for Vercel/serverless (required for rate limiting and IP detection)
+app.set('trust proxy', 1);
+
 // Connect to databases
 connectDB();
 connectCloudinary();
@@ -55,13 +58,17 @@ app.use(
   })
 );
 
-// Rate limiting to prevent abuse
+// Rate limiting to prevent abuse (configured for serverless/Vercel)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
+  // Fix for Vercel/serverless: use x-forwarded-for header
+  keyGenerator: (req) => {
+    return req.headers['x-forwarded-for']?.split(',')[0] || req.ip || 'unknown';
+  },
 });
 
 app.use("/api/", limiter);
