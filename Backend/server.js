@@ -96,6 +96,18 @@ app.get("/api/test", (req, res) => {
   });
 });
 
+// Debug endpoint to check environment variables
+app.get("/api/debug/env", (req, res) => {
+  res.json({
+    nodeEnv: process.env.NODE_ENV,
+    mongoUriExists: !!process.env.MONGO_URI,
+    mongoUriLength: process.env.MONGO_URI?.length || 0,
+    mongoUriPrefix: process.env.MONGO_URI?.substring(0, 20) || 'not set',
+    cloudinaryName: process.env.CLOUDINARY_CLOUD_NAME,
+    allEnvKeys: Object.keys(process.env).filter(k => !k.includes('AWS') && !k.includes('LAMBDA')).sort(),
+  });
+});
+
 app.post("/api/test-upload", (req, res) => {
   console.log("Test upload received:", req.body);
   res.json({
