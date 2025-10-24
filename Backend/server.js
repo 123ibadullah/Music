@@ -30,11 +30,23 @@ console.log("- MONGO_URI exists:", !!process.env.MONGO_URI);
 console.log("- MONGO_URI length:", process.env.MONGO_URI?.length || 0);
 console.log("- CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME);
 
-// Connect to databases
-console.log("📞 Calling connectDB()...");
-connectDB();
+// Connect to databases (with connection retry for serverless)
+console.log("📞 Initializing MongoDB connection...");
+connectDB().catch(err => console.error("Failed to connect to MongoDB on startup:", err));
+
 console.log("📞 Calling connectCloudinary()...");
 connectCloudinary();
+
+// Middleware to ensure DB connection on each request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("❌ DB connection failed:", error.message);
+    res.status(500).json({ success: false, message: "Database connection error" });
+  }
+});
 
 // Security Middlewares
 app.use(

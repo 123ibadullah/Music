@@ -1,6 +1,15 @@
 import mongoose from "mongoose";
 
+// Cache the connection for serverless
+let cachedConnection = null;
+
 const connectDB = async () => {
+  // If already connected, return the cached connection
+  if (cachedConnection && mongoose.connection.readyState === 1) {
+    console.log("✅ Using cached MongoDB connection");
+    return cachedConnection;
+  }
+
   try {
     // Check if MONGO_URI is defined
     if (!process.env.MONGO_URI) {
@@ -11,34 +20,41 @@ const connectDB = async () => {
     console.log("🔗 URI:", process.env.MONGO_URI.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@'));
     
     // Mongoose connection options for serverless
-    await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000, // Increase timeout for cold starts
+    const connection = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 30000, // Increase timeout
       socketTimeoutMS: 45000,
+      maxPoolSize: 10, // Maintain connection pool
+      minPoolSize: 1,
     });
     
     console.log("✅ MongoDB connected successfully");
+    console.log("📋 Registered models:", Object.keys(mongoose.models));
     
-    // Log registered models for debugging
-    mongoose.connection.on("connected", () => {
-      console.log("📋 Registered models:", Object.keys(mongoose.models));
-    });
+    // Cache the connection
+    cachedConnection = connection;
+    return connection;
 
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error.message);
     console.error("❌ Error code:", error.code);
-    // Don't exit in serverless - just log the error
-    if (process.env.NODE_ENV !== 'production') {
-      process.exit(1);
-    }
+    cachedConnection = null;
+    throw error; // Re-throw so controllers can handle it
   }
-
-  mongoose.connection.on("error", (err) => {
-    console.error("❌ MongoDB connection error:", err);
-  });
-
-  mongoose.connection.on("disconnected", () => {
-    console.log("⚠️ MongoDB disconnected");
-  });
 };
+
+// Event handlers
+mongoose.connection.on("error", (err) => {
+  console.error("❌ MongoDB connection error:", err);
+  cachedConnection = null;
+});
+
+mongoose.connection.on("disconnected", () => {
+  console.log("⚠️ MongoDB disconnected");
+  cachedConnection = null;
+});
+
+mongoose.connection.on("connected", () => {
+  console.log("🔗 MongoDB connected event fired");
+});
 
 export default connectDB;
