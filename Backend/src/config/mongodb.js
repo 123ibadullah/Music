@@ -10,8 +10,11 @@ const connectDB = async () => {
     console.log("🔄 Connecting to MongoDB...");
     console.log("🔗 URI:", process.env.MONGO_URI.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@'));
     
-    // Remove deprecated options for newer Mongoose versions
-    await mongoose.connect(process.env.MONGO_URI);
+    // Mongoose connection options for serverless
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000, // Increase timeout for cold starts
+      socketTimeoutMS: 45000,
+    });
     
     console.log("✅ MongoDB connected successfully");
     
@@ -22,7 +25,7 @@ const connectDB = async () => {
 
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error.message);
-    console.error("❌ Full error:", error);
+    console.error("❌ Error code:", error.code);
     // Don't exit in serverless - just log the error
     if (process.env.NODE_ENV !== 'production') {
       process.exit(1);
