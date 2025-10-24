@@ -63,12 +63,10 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: "Too many requests from this IP, please try again later.",
-  standardHeaders: true,
+  standardHeaders: 'draft-7',
   legacyHeaders: false,
-  // Fix for Vercel/serverless: use x-forwarded-for header
-  keyGenerator: (req) => {
-    return req.headers['x-forwarded-for']?.split(',')[0] || req.ip || 'unknown';
-  },
+  // Disable validation for serverless environments
+  validate: false,
 });
 
 app.use("/api/", limiter);
